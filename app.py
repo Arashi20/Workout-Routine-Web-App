@@ -1,13 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for
-# Add your email sending library import here, for example Flask-Mail
+from flask import Flask, render_template, request, redirect, url_for,  send_from_directory
+
 
 app = Flask(__name__)
 
-# Configure your email settings here
 
 @app.route('/')
 def index():
-    return render_template('index.html')  # The form will be here
+    # The form will be here
+    return "Hello, world! The Flask app is working!"  # Temporary message for testing
+
 
 @app.route('/submit', methods=['POST'])
 def submit():
@@ -20,8 +21,31 @@ def submit():
         # Logic to determine which workout plan to send based on experience and frequency
         workout_plan = determine_workout_plan(experience, workout_frequency)
 
-        # Send the email with the workout plan (You will need to implement this)
-        send_email(email, workout_plan)
+         # The path to the workout plans
+        workout_plan_directory = '.'   #same directory ass app.py
+
+
+        # Mapping of workout plans to filenames
+        workout_plan_files = {
+            '2-day HIT workout plan': 'HIT-2-days.pdf',
+            '3-day PPL workout plan': 'PPL-3-days.pdf',
+            '4-day PPL+arms&shoulders workout plan': 'PPL-Arms-Shoulder-4-days.pdf',
+            '3-day Upper/Lower+arms/shoulders workout plan': 'Upper-Lower-Shoulders-arms-3-days.pdf',
+            '4-day upper/lower routine': 'Upper-Lower-4-days.pdf',
+            '6-day PPL workout plan': 'PPL-6-days.pdf',
+        }
+             # Add any additional plans if necessary
+        
+
+        # Get the filename for the chosen workout plan
+        workout_plan_filename = workout_plan_files.get(workout_plan, 'PPL-Arms-Shoulder-4-days.pdf')
+
+        # Serve the file for download
+        return send_from_directory(directory=workout_plan_directory, 
+                                   filename=workout_plan_filename, 
+                                   as_attachment=True)
+
+        
 
         return redirect(url_for('thank_you'))
 
@@ -41,10 +65,12 @@ def determine_workout_plan(experience, workout_frequency):
     elif experience == 'Advanced':
         if workout_frequency == 2:
             return '2-day HIT workout plan'
-        elif 3 <= workout_frequency <= 5:
+        elif workout_frequency==3:
+            return '3-day Upper/Lower+arms/shoulders workout plan'
+        elif 4 <= workout_frequency <= 5:
             return '4-day PPL+arms&shoulders workout plan'
         elif workout_frequency == 6:
-            return '6-day PPL workout plan'
+            return 'PPL-6-days'
     elif experience == 'Expert':
         if workout_frequency == 2:
             return '2-day HIT workout plan'
@@ -53,47 +79,6 @@ def determine_workout_plan(experience, workout_frequency):
         elif workout_frequency >= 4:
             return '4-day upper/lower routine'
 
-def send_email(app, mail, recipient, workout_plan):
-    # Define your email sender
-    sender_email = 'your-email@example.com'  # Replace with your email
-
-    # Create a message object
-    msg = Message("Your Personalized Workout Plan", sender=sender_email, recipients=[recipient])
-
-    # Email body
-    msg.body = f"""
-    Hi (new) gymrat!
-
-    I am thrilled that you have decided to indulge yourself in the world of fitness and weightlifting. With this, I would like to send you the promised workout plan that you can follow to become the greatest version of yourself! Feel free to make any minor changes to your routine or ask for a new one, in case your preferences have changed!
-
-    I would like to thank you for your time and trust in me, I can assure you that the plan will be of great use to you ;)
-
-    Greetings,
-    Arash
-    """
-
-    # Logic to determine the path of the PDF file based on the workout_plan variable
-    pdf_mappings = {
-    "2-day HIT workout plan": "/home/www/HIT-2-days.pdf",
-    "3-day PPL workout plan": "/home/www/PPL-3-days.pdf",
-    "6-day PPL workout plan": "/home/www/PPL-6-days.pdf",
-    "4-day PPL+Arms+Shoulder workout plan": "/home/www/PPL-Arms-Shoulder-4-days.pdf",
-    "4-day Upper/Lower workout plan": "/home/www/Upper-Lower-4-days.pdf",
-    "3-day Upper/Lower+Shoulders+Arms workout plan": "/home/www/Upper-Lower-Shoulders-arms-3-days.pdf",
-    # Continue adding mappings for other workout plans
-}
-
-    pdf_file_path = pdf_mappings.get(workout_plan, "/home/www/default_plan.pdf")  # Replace with the actual default PDF path
-
-    # Ensure the application context is pushed before sending the email
-    with app.app_context():
-        # Check if the file exists
-        if os.path.isfile(pdf_file_path):
-            with app.open_resource(pdf_file_path) as fp:
-                msg.attach("workout_plan.pdf", "application/pdf", fp.read())
-        
-        # Send the email
-        mail.send(msg)
 
 
 @app.route('/thank_you')
