@@ -22,7 +22,7 @@ def submit():
         workout_plan = determine_workout_plan(experience, workout_frequency)
 
          # The path to the workout plans
-        workout_plan_directory = '.'   #same directory ass app.py
+        workout_plan_directory = '.'   #same directory as app.py
 
 
         # Mapping of workout plans to filenames
